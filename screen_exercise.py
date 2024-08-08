@@ -17,7 +17,7 @@ class ScrollableFrame(ttk.Frame):
             )
         )
         
-        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        canvas.create_window((0,2), window=self.scrollable_frame, anchor="nw",width=970)
         canvas.configure(yscrollcommand=scrollbar.set)
         
         canvas.pack(side="left", fill="both", expand=True)
@@ -28,7 +28,7 @@ class Screen_Record(tk.Tk):
         super().__init__()
         
         self.title('Edição de Fichas')
-        self.geometry('1280x720')
+        self.geometry('1010x600')
         self.create_widgets()
 
         self.week = {'DO':{},'SE':{},'TE':{},'QA':{},'QI':{},'SX':{},'SB':{}}
@@ -43,14 +43,8 @@ class Screen_Record(tk.Tk):
         self.frame_info = tk.Frame(self.frame_main)
         self.frame_info.grid(row=0, column=0, pady=10, padx=10, sticky="ew")
         
-        list_infos = {
-            "name": "Nome: Andre Luis",
-            "meta": 'Objetivo: Hipertrofia',
-            "gender": 'Gênero: Masculino',
-            "olds": 'Idade: 16',
-            "weight": 'Peso: 47kg',
-            "height": 'Altura: 1.68m'
-        }
+        aux = self.abrir_json()
+        list_infos = aux["cliente"]["infos"]
         
         r = 0
         c = 0
@@ -58,8 +52,10 @@ class Screen_Record(tk.Tk):
             if c == 3:
                 c = 0
                 r += 1
-            tk.Label(self.frame_info, text=value).grid(row=r, column=c, padx=10, pady=5, sticky="w")
-            c += 1
+
+            if key  in ["name","meta","gender","olds","weight","height"]:
+                tk.Label(self.frame_info, text=value).grid(row=r, column=c, padx=10, pady=5, sticky="w")
+                c += 1
 
         self.button_save = tk.Button(self.frame_info, text="Salvar",command=lambda: self.save_to_json())
         self.button_save.grid(row=0, column=3, padx=10, pady=5)
@@ -67,15 +63,15 @@ class Screen_Record(tk.Tk):
         self.monthly = tk.Entry(self.frame_info)
         self.monthly.grid(row=1, column=3, padx=10, pady=5)
 
-        self.button_math = tk.Button(self.frame_info, text="Calcular")
-        self.button_math.grid(row=1, column=4, padx=10, pady=5)
-
         # return_day Frame
         self.frame_return_day = tk.Frame(self.frame_main)
         self.frame_return_day.grid(row=1, column=0, pady=10, padx=10, sticky="nsew")
         
-        self.notebook = ttk.Notebook(self.frame_return_day,width=1240)
-        self.notebook.pack(fill="both", expand=True)
+        self.style = ttk.Style()
+        self.style.configure('TNotebook.Tab', padding=[45, 10])
+        
+        self.notebook = ttk.Notebook(self.frame_return_day, width=970,style='TNotebook')
+        self.notebook.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.tabs = []
         days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"]
@@ -92,81 +88,67 @@ class Screen_Record(tk.Tk):
 
         for index in range(len(self.tabs)):
             for i in range(len(self.headers)):
-                label = tk.Label(self.tabs[index], text=self.headers[i], width=10)
+                label = tk.Label(self.tabs[index], text=self.headers[i], width=13)
                 label.grid(row=0, column=i, padx=10, pady=10)
 
             button_col = len(self.headers)
-            button = tk.Button(self.tabs[index], text='Adicionar Exercício', 
+            button = tk.Button(self.tabs[index],width=14,height=2, text='Adicionar Exercício', 
                             command=lambda idx=index: self.add_exercise(index=idx))
-            button.grid(row=0, column=button_col, padx=10, pady=10)
+            button.grid(row=0, column=button_col, padx=0, pady=0)
 
-    def add_exercise(self,index):
+    def add_exercise(self, index):
         lista = []
         for i in range(len(self.headers)):
-            entrys = tk.Entry(self.tabs[index],width=10)
-            entrys.grid(row=self.rows[index],column=i,padx=10,pady=10)
-            lista.append(entrys)
-        button = tk.Button(self.tabs[index],text='Remover',command=lambda:self.remove_exercise(index=index))
-        button.grid(row=self.rows[index],column=7)
+            entry = tk.Text(self.tabs[index], width=11,height=2)
+            entry.grid(row=self.rows[index], column=i, padx=1, pady=1)
+            lista.append(entry)
+        button = tk.Button(self.tabs[index], text='Remover',width=14,height=2, command=lambda row=self.rows[index]: self.remove_exercise(index=index, row=row))
+        button.grid(row=self.rows[index], column=7)
         lista.append(button)
         
         self.week[self.return_day(index=index)][self.rows[index]] = lista
-        print(self.week)
         self.rows[index] += 1
 
-    def remove_exercise(self,index):
-        lista = self.week[self.return_day(index=index)]
-        for index in list(lista.keys()):
-            aux = lista[index]
-            for wigth in aux:
-                wigth.destroy()
+    def remove_exercise(self, index, row):
+        lista = self.week[self.return_day(index=index)].pop(row, None)
+        if lista:
+            for widget in lista:
+                widget.destroy()
 
     def save_to_json(self, filename='exercises.json'):
+        arq = self.abrir_json(filename)  # Assume que `abrir_json` retorna um dicionário válido
         data = {}
 
         for category, entries in self.week.items():
-            category_data = {}
+            if category not in data:
+                data[category] = {}
+
+            category_data = data[category]
             for index, widgets in entries.items():
                 widgets_data = []
                 for widget in widgets:
-                    try:
-                        if isinstance(widget, tk.Entry):
-                            widgets_data.append(widget.get()) 
-                    except Exception as e:
-                        widgets_data.append(f"Error: {str(e)}")
+                    if isinstance(widget, tk.Text):
+                        valor = widget.get("1.0", "end-1c")  # Obtém todo o texto do widget Text
+                        widgets_data.append(valor)
 
                 category_data[str(index)] = widgets_data
 
-            data[category] = category_data
+        arq.setdefault("cliente", {})
+        arq["cliente"]["exercises"] = data
 
-        # Salvar o dicionário de dados em um arquivo JSON
-        with open(filename, 'w') as f:
-            json.dump(data, f, indent=4)
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(arq, f, indent=4, ensure_ascii=False)
 
-    def save_button(self,index):
-        aux = list(self.week.keys())
-        for index in range(len(aux)):
-            lista = self.week[aux[index]]
-            for widget in lista:
-                try:
-                    print(widget.get())
-                except:
-                    pass
-    
-    def sla(self):
-        lista = ['DO','SE','TE','QA','QI','SX','SB']
-        for index in range(len(lista)):
-            aux = self.week[lista[index]]
-            for i in aux:
-                try:
-                    print(i.get())
-                except:
-                    pass
 
-    def return_day(self,index):
+    def return_day(self, index):
         lista = ['DO','SE','TE','QA','QI','SX','SB']
         return lista[index]
-            
+    
+    def abrir_json(self, filename='exercises.json'):
+        with open(filename, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+
 if __name__ == '__main__':
     app = Screen_Record()
     app.mainloop()
