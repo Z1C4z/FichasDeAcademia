@@ -1,0 +1,85 @@
+{
+    "DO": {
+        "1": [
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry2\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry3\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry4\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry5\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry6\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry7\""
+        ],
+        "2": [
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry8\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry9\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry10\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry11\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry12\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry13\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry14\""
+        ],
+        "3": [
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry15\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry16\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry17\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry18\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry19\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry20\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry21\""
+        ],
+        "4": [
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry22\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry23\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry24\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry25\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry26\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry27\"",
+            "Error: invalid command name \".!frame.!frame2.!notebook.!frame.!scrollableframe.!canvas.!frame.!entry28\""
+        ]
+    },
+    "SE": {
+        "1": [
+            "q",
+            "w",
+            "e",
+            "r",
+            "t",
+            "y",
+            "u"
+        ]
+    },
+    "TE": {
+        "1": [
+            "q",
+            "w",
+            "e",
+            "r",
+            "t",
+            "y",
+            "u"
+        ],
+        "2": [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ]
+    },
+    "QA": {
+        "1": [
+            "q",
+            "w",
+            "e",
+            "r",
+            "t",
+            "y",
+            "u"
+        ]
+    },
+    "QI": {},
+    "SX": {},
+    "SB": {}
+}
