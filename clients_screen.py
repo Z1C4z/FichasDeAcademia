@@ -7,24 +7,33 @@ class Main_Screen(tk.Tk):
         super().__init__()
 
         self.title('Tela Principal')
-        self.geometry('1280x720')
+        self.geometry('1034x570')
         self.screen()
 
     def screen(self):
-        # Cria o notebook para as abas
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(padx=10, pady=10, expand=True, fill='both')
 
-        # Lista para armazenar as abas
         self.tabs = []
         for aba in ['Clientes', 'Equipamentos', 'Suplementos', 'Treinadores']:
-            tab = ttk.Frame(self.notebook)  # Cria um Frame para cada aba
-            self.notebook.add(tab, text=aba)  # Adiciona o Frame ao Notebook
-            self.tabs.append(tab)  # Armazena a aba na lista
+            tab = ttk.Frame(self.notebook)
+            self.notebook.add(tab, text=aba)
+            self.tabs.append(tab)
 
-        # Instancia a classe Screen_Record na aba "Clientes"
-        sr = Screen_Record(self.tabs[0])
+        self.leave_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.leave_tab, text='Sair e Salvar')
+        self.tabs.append(self.leave_tab)
+        
+        self.notebook.bind('<<NotebookTabChanged>>', self.on_tab_change)
+    
+    def on_tab_change(self, event):
+        selected_tab = self.notebook.select()
+        if selected_tab == str(self.leave_tab):
+            self.leave()
+
+    def leave(self, event=None):
+        self.quit()
 
 if __name__ == '__main__':
-    sys = Main_Screen()  # Cria a janela principal
-    sys.mainloop()  # Inicia o loop principal da interface gráfica
+    sys = Main_Screen()
+    sys.mainloop()

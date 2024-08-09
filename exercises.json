@@ -1,14 +1,16 @@
 {
-    "cliente": {
+    "000": {
         "infos": {
-            "name": "Andre Luis",
+            "name": "Pedro",
             "meta": "Hipertrofia",
             "gender": "Masculino",
             "olds": "16",
             "weight": "47kg",
             "height": "1.68m",
+            "mounthly": "10.00",
             "password": "123",
-            "id": "000"
+            "id": "000",
+            "monthly": "abc"
         },
         "exercises": {
             "DO": {
@@ -20,15 +22,6 @@
                     "a",
                     "a",
                     "a"
-                ],
-                "2": [
-                    "s",
-                    "d",
-                    "f",
-                    "d",
-                    "g",
-                    "g",
-                    "h"
                 ]
             },
             "SE": {},
@@ -36,7 +29,17 @@
             "QA": {},
             "QI": {},
             "SX": {},
-            "SB": {}
+            "SB": {
+                "1": [
+                    "q",
+                    "q",
+                    "q",
+                    "q",
+                    "q",
+                    "q",
+                    "q"
+                ]
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import json
+import os
 
 class ScrollableFrame(ttk.Frame):
     def __init__(self, container, *args, **kwargs):
@@ -24,14 +25,19 @@ class ScrollableFrame(ttk.Frame):
         scrollbar.pack(side="right", fill="y")
 
 class Screen_Record(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent,client=None):
         super().__init__(parent)
         
-        self.parent = parent
-        self.create_widgets()
-
         self.week = {'DO':{},'SE':{},'TE':{},'QA':{},'QI':{},'SX':{},'SB':{}}
         self.rows = [1,1,1,1,1,1,1]
+
+        self.arq = self.abrir_json()
+
+        self.parent = parent
+        self.client = "000"
+        
+        self.create_widgets()
+        self.load_existing_data()
 
     def create_widgets(self):
         self.frame_main = tk.Frame(self, height=720, width=1280)
@@ -41,24 +47,44 @@ class Screen_Record(tk.Frame):
         self.frame_info.grid(row=0, column=0, pady=10, padx=10, sticky="ew")
         
         aux = self.abrir_json()
-        list_infos = aux["cliente"]["infos"]
+        list_infos = aux[self.client]["infos"]
         
         r = 0
         c = 0
+        
+        translate = ["Nome","Objetivo","Genero","Idade","Peso","Altura"]
+        temp = 0
         for key, value in list_infos.items():
             if c == 3:
                 c = 0
                 r += 1
 
             if key in ["name","meta","gender","olds","weight","height"]:
-                tk.Label(self.frame_info, text=value).grid(row=r, column=c, padx=10, pady=5, sticky="w")
+
+                labelFrame = tk.LabelFrame(self.frame_info,text=translate[temp],height=55,width=100)
+                labelFrame.grid(row=r, column=c, padx=10, pady=5, sticky="w")
+                labelFrame.grid_propagate(False)
+
+                label = tk.Label(labelFrame, text=value)
+                label.grid(padx=10,pady=5)
+                temp += 1
                 c += 1
 
-        self.button_save = tk.Button(self.frame_info, text="Salvar", command=lambda: self.save_to_json())
-        self.button_save.grid(row=0, column=3, padx=10, pady=5)
+        self.button_save = tk.Button(self.frame_info, text="Salvar", command=lambda: self.save_to_json(),width=20,height=6)
+        self.button_save.grid(row=0, column=10, padx=11, rowspan=2, pady=5)
 
-        self.monthly = tk.Entry(self.frame_info)
-        self.monthly.grid(row=1, column=3, padx=10, pady=5)
+        self.button_back = tk.Button(self.frame_info, text="Cancelar", command=self.back_screen(),width=20,height=6)
+        self.button_back.grid(row=0, column=11, padx=11, rowspan=2, pady=5)
+
+        self.labelFrame_monthly = tk.LabelFrame(self.frame_info,text="Preco da Mensalidade",width=160,height=55)
+        self.labelFrame_monthly.grid(row=0, column=5, columnspan=2, padx=10, pady=5)
+        self.labelFrame_monthly.grid_propagate(False)
+        
+        self.label_re = tk.Label(self.labelFrame_monthly,text='R$:')
+        self.label_re.grid(row=0,column=0)
+
+        self.monthly = tk.Entry(self.labelFrame_monthly,width=20)
+        self.monthly.grid(row=0,column=1)
 
         self.frame_return_day = tk.Frame(self.frame_main)
         self.frame_return_day.grid(row=1, column=0, pady=10, padx=10, sticky="nsew")
@@ -92,11 +118,15 @@ class Screen_Record(tk.Frame):
                                command=lambda idx=index: self.add_exercise(index=idx))
             button.grid(row=0, column=button_col, padx=0, pady=0)
 
-    def add_exercise(self, index):
+    def add_exercise(self, index,values=None):
         lista = []
         for i in range(len(self.headers)):
             entry = tk.Text(self.tabs[index], width=11, height=2)
             entry.grid(row=self.rows[index], column=i, padx=1, pady=1)
+
+            if values and i < len(values):
+                entry.insert("1.0",values[i])
+
             lista.append(entry)
         button = tk.Button(self.tabs[index], text='Remover', width=14, height=2, command=lambda row=self.rows[index]: self.remove_exercise(index=index, row=row))
         button.grid(row=self.rows[index], column=7)
@@ -112,13 +142,12 @@ class Screen_Record(tk.Frame):
                 widget.destroy()
 
     def save_to_json(self, filename='exercises.json'):
-        arq = self.abrir_json(filename)
         data = {}
 
         for category, entries in self.week.items():
             if category not in data:
                 data[category] = {}
-
+                
             category_data = data[category]
             for index, widgets in entries.items():
                 widgets_data = []
@@ -129,26 +158,44 @@ class Screen_Record(tk.Frame):
 
                 category_data[str(index)] = widgets_data
 
-        arq.setdefault("cliente", {})
-        arq["cliente"]["exercises"] = data
+        self.arq.setdefault(self.client, {})
+        self.arq[self.client]["infos"]["monthly"] = str(self.monthly.get())
+        self.arq[self.client]["exercises"] = data
 
         with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(arq, f, indent=4, ensure_ascii=False)
+            json.dump(self.arq, f, indent=4, ensure_ascii=False)
+
+    def load_existing_data(self):
+        exercises = self.arq.get(self.client, {}).get("exercises", {})
+        for day, data in exercises.items():
+            index = self.return_day_index(day)
+            if index is not None:
+                for idx, values in data.items():
+                    self.add_exercise(index=index, values=values)
+
+    def back_screen(self):
+        pass
 
     def return_day(self, index):
         lista = ['DO','SE','TE','QA','QI','SX','SB']
         return lista[index]
     
-    def abrir_json(self, filename='exercises.json'):
-        with open(filename, 'r', encoding='utf-8') as f:
-            return json.load(f)
+    def return_day_index(self, day):
+        lista = {'DO': 0, 'SE': 1, 'TE': 2, 'QA': 3, 'QI': 4, 'SX': 5, 'SB': 6}
+        return lista.get(day, None)
+    
+    def abrir_json(self):
+        file_path = "exercises.json"
+        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+            with open(file_path, 'r') as file:
+                return json.load(file)
 
 class Main_Screen(tk.Tk):
     def __init__(self):
         super().__init__()
 
         self.title('Tela Principal')
-        self.geometry('1280x720')
+        self.geometry('1034x570')
         self.screen()
 
     def screen(self):
@@ -164,6 +211,5 @@ class Main_Screen(tk.Tk):
         sr = Screen_Record(self.tabs[0])
         sr.pack(fill='both', expand=True)
 
-if __name__ == '__main__':
-    sys = Main_Screen()
-    sys.mainloop()
+sys = Main_Screen()
+sys.mainloop()
