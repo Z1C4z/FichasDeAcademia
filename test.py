@@ -28,20 +28,23 @@ class Screen_Record(tk.Frame):
         super().__init__(parent)
         
         self.parent = parent
+        self.week = {'DO': {}, 'SE': {}, 'TE': {}, 'QA': {}, 'QI': {}, 'SX': {}, 'SB': {}}
+        self.rows = [1, 1, 1, 1, 1, 1, 1]
+        self.arq = self.abrir_json()  # Carregue o arquivo JSON na inicialização
+        
         self.create_widgets()
-
-        self.week = {'DO':{},'SE':{},'TE':{},'QA':{},'QI':{},'SX':{},'SB':{}}
-        self.rows = [1,1,1,1,1,1,1]
+        self.load_existing_data()  # Carregar os dados existentes nos Text widgets
 
     def create_widgets(self):
+        # Main Frame
         self.frame_main = tk.Frame(self, height=720, width=1280)
         self.frame_main.pack(padx=10, pady=10, fill='both', expand=True)
         
+        # Info Frame
         self.frame_info = tk.Frame(self.frame_main)
         self.frame_info.grid(row=0, column=0, pady=10, padx=10, sticky="ew")
         
-        aux = self.abrir_json()
-        list_infos = aux["cliente"]["infos"]
+        list_infos = self.arq["cliente"]["infos"]
         
         r = 0
         c = 0
@@ -50,7 +53,7 @@ class Screen_Record(tk.Frame):
                 c = 0
                 r += 1
 
-            if key in ["name","meta","gender","olds","weight","height"]:
+            if key in ["name", "meta", "gender", "olds", "weight", "height"]:
                 tk.Label(self.frame_info, text=value).grid(row=r, column=c, padx=10, pady=5, sticky="w")
                 c += 1
 
@@ -60,6 +63,7 @@ class Screen_Record(tk.Frame):
         self.monthly = tk.Entry(self.frame_info)
         self.monthly.grid(row=1, column=3, padx=10, pady=5)
 
+        # return_day Frame
         self.frame_return_day = tk.Frame(self.frame_main)
         self.frame_return_day.grid(row=1, column=0, pady=10, padx=10, sticky="nsew")
         
@@ -92,11 +96,15 @@ class Screen_Record(tk.Frame):
                                command=lambda idx=index: self.add_exercise(index=idx))
             button.grid(row=0, column=button_col, padx=0, pady=0)
 
-    def add_exercise(self, index):
+    def add_exercise(self, index, values=None):
         lista = []
-        for i in range(len(self.headers)):
+        for i, header in enumerate(self.headers):
             entry = tk.Text(self.tabs[index], width=11, height=2)
             entry.grid(row=self.rows[index], column=i, padx=1, pady=1)
+            
+            if values and i < len(values):
+                entry.insert("1.0", values[i])  # Inserir o valor carregado no Text widget
+            
             lista.append(entry)
         button = tk.Button(self.tabs[index], text='Remover', width=14, height=2, command=lambda row=self.rows[index]: self.remove_exercise(index=index, row=row))
         button.grid(row=self.rows[index], column=7)
@@ -105,6 +113,14 @@ class Screen_Record(tk.Frame):
         self.week[self.return_day(index=index)][self.rows[index]] = lista
         self.rows[index] += 1
 
+    def load_existing_data(self):
+        exercises = self.arq.get("cliente", {}).get("exercises", {})
+        for day, data in exercises.items():
+            index = self.return_day_index(day)
+            if index is not None:
+                for idx, values in data.items():
+                    self.add_exercise(index=index, values=values)
+
     def remove_exercise(self, index, row):
         lista = self.week[self.return_day(index=index)].pop(row, None)
         if lista:
@@ -112,7 +128,6 @@ class Screen_Record(tk.Frame):
                 widget.destroy()
 
     def save_to_json(self, filename='exercises.json'):
-        arq = self.abrir_json(filename)
         data = {}
 
         for category, entries in self.week.items():
@@ -124,21 +139,24 @@ class Screen_Record(tk.Frame):
                 widgets_data = []
                 for widget in widgets:
                     if isinstance(widget, tk.Text):
-                        valor = widget.get("1.0", "end-1c")
+                        valor = widget.get("1.0", "end-1c")  # Obtém todo o texto do widget Text
                         widgets_data.append(valor)
 
                 category_data[str(index)] = widgets_data
 
-        arq.setdefault("cliente", {})
-        arq["cliente"]["exercises"] = data
+        self.arq["cliente"]["exercises"] = data
 
         with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(arq, f, indent=4, ensure_ascii=False)
+            json.dump(self.arq, f, indent=4, ensure_ascii=False)
 
     def return_day(self, index):
-        lista = ['DO','SE','TE','QA','QI','SX','SB']
+        lista = ['DO', 'SE', 'TE', 'QA', 'QI', 'SX', 'SB']
         return lista[index]
-    
+
+    def return_day_index(self, day):
+        lista = {'DO': 0, 'SE': 1, 'TE': 2, 'QA': 3, 'QI': 4, 'SX': 5, 'SB': 6}
+        return lista.get(day, None)
+
     def abrir_json(self, filename='exercises.json'):
         with open(filename, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -161,6 +179,7 @@ class Main_Screen(tk.Tk):
             self.notebook.add(tab, text=aba)
             self.tabs.append(tab)
 
+        # Adicionando Screen_Record na aba "Clientes"
         sr = Screen_Record(self.tabs[0])
         sr.pack(fill='both', expand=True)
 
