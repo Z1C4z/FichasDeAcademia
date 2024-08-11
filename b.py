@@ -10,7 +10,6 @@ class PersonalTrainerApp:
         self.frame = frame
         self.alunos_frame = alunos_frame
         self.clients = {}
-        self.photo_path = None
         self.json_file = "clientes.json"  # Nome do arquivo JSON
         self.load_clients()  # Carregar os dados ao iniciar
         self.create_clients_tab()
@@ -19,18 +18,7 @@ class PersonalTrainerApp:
     def create_clients_tab(self):
         frame = tk.LabelFrame(self.frame, text="Cadastro de Clientes", padx=20, pady=20, bg="light gray")
         frame.pack(fill="both", expand="yes", padx=20, pady=10)
-
-        # Photo upload
-        self.photo_frame = tk.Frame(frame, bg="#D3D3D3")
-        self.photo_frame.grid(row=0, column=0, columnspan=2, pady=10, sticky="ew")
-        self.photo_frame.grid_columnconfigure(0, weight=1)
-        self.photo_label = tk.Label(self.photo_frame, text="Foto do Cliente", font=('Helvetica', 10, 'bold'), bg="light gray")
-        self.photo_label.pack(anchor="center")
-        self.photo_button = ttk.Button(self.photo_frame, text="Carregar Foto", command=self.load_photo, style="TButton")
-        self.photo_button.pack(pady=10, anchor="center")
-        self.photo_display = tk.Label(self.photo_frame, bg='light gray')
-        self.photo_display.pack(anchor="center")
-
+        
         # Client form
         self.client_form = {}
         fields = ["Nome Completo", "Idade", "Sexo", "Peso", "Altura", "Data de Início"]
@@ -51,15 +39,6 @@ class PersonalTrainerApp:
         ttk.Button(btn_frame, text="Atualizar", command=self.update_client, style="TButton").pack(side="left", padx=5)
         ttk.Button(btn_frame, text="Excluir", command=self.delete_client, style="TButton").pack(side="left", padx=5)
 
-    def load_photo(self):
-        self.photo_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png")])
-        if self.photo_path:
-            image = Image.open(self.photo_path)
-            image = image.resize((100, 100), Image.LANCZOS)
-            photo = ImageTk.PhotoImage(image)
-            self.photo_display.config(image=photo)
-            self.photo_display.image = photo
-
     def add_client(self):
         data = {field: self.client_form[field].get() for field in self.client_form}
         if not all(data.values()):
@@ -76,7 +55,7 @@ class PersonalTrainerApp:
             return
 
         client_id = len(self.clients) + 1
-        self.clients[client_id] = {**data, "Foto": self.photo_path}
+        self.clients[client_id] = {**data}
         self.clear_form(self.client_form)
 
         # Salvar os dados no JSON
@@ -133,9 +112,6 @@ class PersonalTrainerApp:
     def clear_form(self, form):
         for field in form:
             form[field].delete(0, tk.END)
-        self.photo_display.config(image='')
-        self.photo_display.image = None
-        self.photo_path = None
 
     def save_clients(self):
         """Salva os clientes no arquivo JSON."""
@@ -150,7 +126,7 @@ class PersonalTrainerApp:
 
     def create_alunos_cadastrados_tab(self):
         self.alunos_tree = ttk.Treeview(self.alunos_frame, columns=("Nome", "Idade", "Sexo", "Peso", "Altura", "Data de Início"), show="headings")
-        self.alunos_tree.heading("Nome", text="Nome Completo")
+        self.alunos_tree.heading("Nome", text="Nome")
         self.alunos_tree.heading("Idade", text="Idade")
         self.alunos_tree.heading("Sexo", text="Sexo")
         self.alunos_tree.heading("Peso", text="Peso")
