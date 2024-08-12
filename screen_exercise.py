@@ -117,7 +117,7 @@ class Screen_Record(tk.Frame):
             for widget in lista:
                 widget.destroy()
 
-    def save_to_json(self, filename='exercises.json'):
+    def save_to_json(self, filename='jsons/exercises.json'):
         for key, entry in self.entries_info.items():
             self.arq[self.client]["infos"][key] = entry.get()
         data = {day: {str(idx): [widget.get("1.0", "end-1c") for widget in widgets if isinstance(widget, tk.Text)]
@@ -128,7 +128,7 @@ class Screen_Record(tk.Frame):
         self.save_json(filename)
         self.back_screen()
 
-    def save_json(self, filename='exercises.json'):
+    def save_json(self, filename='jsons/exercises.json'):
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(self.arq, f, indent=4, ensure_ascii=False)
 
@@ -149,7 +149,7 @@ class Screen_Record(tk.Frame):
     def return_day_index(self, day):
         return {'DO': 0, 'SE': 1, 'TE': 2, 'QA': 3, 'QI': 4, 'SX': 5, 'SB': 6}.get(day, None)
     
-    def load_json(self, filename="exercises.json"):
+    def load_json(self, filename="jsons/exercises.json"):
         if os.path.exists(filename) and os.path.getsize(filename) > 0:
             with open(filename, 'r') as file:
                 return json.load(file)

@@ -14,6 +14,7 @@ class LoginFrame(tk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
+
         tk.Label(self, text="Usuário").pack(pady=10)
         self.username_entry = tk.Entry(self)
         self.username_entry.pack(pady=5)
@@ -23,10 +24,50 @@ class LoginFrame(tk.Frame):
         self.password_entry.pack(pady=5)
 
         tk.Button(self, text="Login", command=self.check_login).pack(pady=20)
+        tk.Button(self, text="Login pelo ID", command=self.id_login).pack(pady=20)
 
     def check_login(self):
-        # Aqui você pode adicionar a lógica de autenticação
-        self.on_login_success()
+        if os.path.exists("Treinadores.json"):
+            with open("Treinadores.json", 'r') as f:
+                data = json.load(f)
+            for ID in data:
+                if self.username_entry.get() == data[ID][0] and self.password_entry.get() == data[ID][1]:
+                    self.on_login_success()
+                    aux = False
+                else:
+                    aux = True
+            if aux:
+                messagebox.showwarning("Login Invalido", "Usuaria e/ou Senha invalido(s).")
+        else:
+            self.on_login_success()
+
+    def check_id(self):
+        entry = self.entry_id.get()
+
+        if os.path.exists("Treinadores.json"):
+            with open("Treinadores.json", 'r') as f:
+                data = json.load(f)
+        else:
+            self.popup.destroy()
+        
+        if entry in data.keys():
+            self.popup.destroy()
+            self.on_login_success()
+        else:
+            messagebox.showwarning("Login Invalido", "ID não encontrado")
+
+    def id_login(self):
+        self.popup = tk.Toplevel(self)
+        self.popup.title(f"Login pelo ID")
+        
+        tk.Label(self.popup, text="Insira seu ID:").pack(pady=5)
+        self.entry_id = tk.Entry(self.popup)
+        self.entry_id.pack(pady=5)
+
+        tk.Button(self.popup, text="Confirmar", 
+                  command=self.check_id).pack(pady=10)
+        
+        tk.Button(self.popup, text="Cancelar", command=self.popup.destroy).pack(pady=5)
 
 class ManagementSystem(tk.Frame):
     def __init__(self, master):
@@ -35,14 +76,14 @@ class ManagementSystem(tk.Frame):
 
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(pady=10, expand=True, fill="both")
-
+        self.open = False
         self.tabs = {
             "Alunos": ["Nome"],
             "Equipamentos": ["Nome", "Quantidade"],
             "Suplementos": ["Nome", "Quantidade"],
             "Agenda": ["Dia", "Horário", "Descrição"],
             "Finanças": ["Valor", "Descrição"],
-            "Treinadores": ["Nome", "Senha"]
+            "Treinadores": ["Nome","Senha"]
         }
 
         self.data = {tab: {} for tab in self.tabs.keys()}
@@ -54,9 +95,10 @@ class ManagementSystem(tk.Frame):
             frame = self.create_tab(title)
             tree = self.create_treeview(frame, fields, title)
 
-            ttk.Button(frame, text="Adicionar", 
-                       command=lambda t=tree, f=fields, title=title: self.create_add_popup(t, f, title)).pack(side="left", padx=10, pady=10)
-
+            self.add_b = ttk.Button(frame, text="Adicionar", 
+                       command=lambda t=tree, f=fields, title=title: self.create_add_popup(t, f, title))
+            self.add_b.pack(side="left", padx=10, pady=10)
+            
             ttk.Button(frame, text="Remover", 
                        command=lambda t=tree, title=title: self.remove_item(t, title)).pack(side="left", padx=10, pady=10)
 
@@ -90,21 +132,24 @@ class ManagementSystem(tk.Frame):
         return tree
 
     def create_add_popup(self, tree, fields, title):
-        popup = tk.Toplevel(self)
-        popup.title(f"Adicionar {title[:-1]}")
-        
-        entries = {}
-        for field in fields:
-            tk.Label(popup, text=field).pack(pady=5)
-            entry = DateEntry(popup) if field == "Dia" else tk.Entry(popup)
-            entry.pack(pady=5)
-            entries[field] = entry
+        if not self.open:
+            self.open = True
+            popup = tk.Toplevel(self)
+            popup.title(f"Adicionar {title[:-1]}")
+            
+            entries = {}
+            for field in fields:
+                tk.Label(popup, text=field).pack(pady=5)
+                entry = DateEntry(popup) if field == "Dia" else tk.Entry(popup)
+                entry.pack(pady=5)
+                entries[field] = entry
 
-        tk.Button(popup, text="Confirmar", 
-                  command=lambda: [self.add_item(tree, entries, title), popup.destroy()]).pack(pady=10)
-        
-        tk.Button(popup, text="Cancelar", command=popup.destroy).pack(pady=5)
-
+            tk.Button(popup, text="Confirmar", 
+                    command=lambda: [self.add_item(tree, entries, title), popup.destroy(), self.add_b.config(state=tk.NORMAL)]).pack(pady=10)
+            
+            tk.Button(popup, text="Cancelar", command=lambda: self.closePopup(popup)).pack(pady=5)
+    def closePopup(self, pop):
+        self.open = False
     def generate_unique_id(self, prefix):
         while True:
             unique_id = f"{prefix}{str(uuid.uuid4().int)[:6]}"
@@ -112,6 +157,7 @@ class ManagementSystem(tk.Frame):
                 return unique_id
 
     def add_item(self, tree, entries, title):
+        self.open = False
         prefix = title[0]
         unique_id = self.generate_unique_id(prefix)
         values = [unique_id] + [entry.get() for entry in entries.values()]
@@ -137,7 +183,7 @@ class ManagementSystem(tk.Frame):
         if selected_item:
             values = tree.item(selected_item, 'values')
             if title == "Alunos":
-                self.open_student_edit_screen(aluno=values[0])
+                self.open_student_edit_screen(aluno=values[0],alu=values[1])
             else:
                 edit_popup = tk.Toplevel(self)
                 edit_popup.title(f"Editar {title[:-1]}")
@@ -164,9 +210,9 @@ class ManagementSystem(tk.Frame):
         else:
             messagebox.showwarning("Atenção", "Todos os campos devem ser preenchidos.")
 
-    def open_student_edit_screen(self, aluno):
+    def open_student_edit_screen(self, aluno,alu):
         student_screen = tk.Toplevel(self)
-        student_screen.title("Editar Aluno")
+        student_screen.title(f"Editar {alu} - {aluno}")
         screen = Screen_Record(student_screen, client=aluno)
         screen.pack(fill="both", expand=True)
 
@@ -176,13 +222,13 @@ class ManagementSystem(tk.Frame):
             values = tree.item(item, 'values')
             self.data[tab_name][values[0]] = values[1:]
         
-        filename = f"{tab_name.lower()}.json"
+        filename = f"jsons/{tab_name.lower()}.json"
         with open(filename, 'w') as f:
             json.dump(self.data[tab_name], f, indent=4)
 
     def load_from_json(self):
         for tab_name in self.tabs.keys():
-            filename = f"{tab_name.lower()}.json"
+            filename = f"jsons/{tab_name.lower()}.json"
             if os.path.exists(filename):
                 with open(filename, 'r') as f:
                     loaded_data = json.load(f)
@@ -216,7 +262,6 @@ class MainApp(tk.Tk):
         self.title("Sistema de Gerenciamento")
         self.geometry("900x600")
 
-        # Cria a área de login
         self.login_frame = LoginFrame(self, self.show_management_system)
         self.login_frame.pack(fill="both", expand=True)
 
